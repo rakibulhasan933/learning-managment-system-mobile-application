@@ -384,6 +384,11 @@ export const api = {
       const job = RNFS.downloadFile({
         fromUrl: signed.url,
         toFile: path,
+        // R2 can take longer than Android's short native connection timeout,
+        // especially on mobile networks. Keep the signed URL flow intact but
+        // allow enough time to establish the connection and receive a video.
+        connectionTimeout: 30000,
+        readTimeout: 120000,
         progressDivider: 2,
         begin: () => onProgress?.(0),
         progress: event => {

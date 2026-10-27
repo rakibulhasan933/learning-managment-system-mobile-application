@@ -30,7 +30,6 @@ import {
   Download,
   FileText,
   GraduationCap,
-  Home,
   LogOut,
   Maximize2,
   Minimize2,
@@ -68,6 +67,8 @@ import {
   loadSession,
 } from './src/api';
 import { colors, styles } from './src/theme';
+import { AuthNavigator as FileAuthNavigator } from './src/navigation/AuthNavigator';
+import { StudentNavigator as FileStudentNavigator } from './src/navigation/StudentNavigator';
 
 type Screen =
   | { kind: 'home' }
@@ -106,6 +107,7 @@ type Screen =
     };
 
 type NavKey = 'home' | 'classes' | 'download';
+
 
 type LearningAssignment = {
   id: string;
@@ -146,34 +148,12 @@ function formatTotal(seconds: number) {
 export default function App() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [ready, setReady] = useState(false);
-  const setItems = (_items: OfflineVideo[]) => undefined;
 
   useEffect(() => {
     loadSession()
       .then(session => setProfile(session?.profile ?? null))
       .finally(() => setReady(true));
   }, []);
-
-  /* remove-download action belongs to DownloadsScreen */
-  const remove = (item: OfflineVideo) => {
-    Alert.alert('Delete download?', `Remove “${item.title}” from this phone?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () =>
-          api
-            .removeOffline(item.lectureId)
-            .then(setItems)
-            .catch(() =>
-              Alert.alert(
-                'Delete failed',
-                'The download could not be removed.',
-              ),
-            ),
-      },
-    ]);
-  };
 
   return (
     <SafeAreaProvider>
@@ -183,7 +163,7 @@ export default function App() {
       ) : profile ? (
         <StudentApp profile={profile} onLogout={() => setProfile(null)} />
       ) : (
-        <Login onLogin={setProfile} />
+        <FileAuthNavigator screens={{ Login }} onLogin={setProfile} />
       )}
     </SafeAreaProvider>
   );
@@ -237,7 +217,7 @@ function ErrorState({
   );
 }
 
-function Login({ onLogin }: { onLogin: (profile: Profile) => void }) {
+export function Login({ onLogin }: { onLogin: (profile: Profile) => void }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -340,6 +320,309 @@ function Login({ onLogin }: { onLogin: (profile: Profile) => void }) {
   );
 }
 
+/* Legacy in-file navigator implementation retained below for reference.
+function AuthNavigator({ onLogin }: { onLogin: (profile: Profile) => void }) {
+  return (
+    <NavigationContainer>
+      <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+        <AuthStack.Screen name="Login">
+          {() => <Login onLogin={onLogin} />}
+        </AuthStack.Screen>
+      </AuthStack.Navigator>
+    </NavigationContainer>
+  );
+}
+
+function StudentNavigator({
+  profile,
+  onLogout,
+}: {
+  profile: Profile;
+  onLogout: () => void;
+}) {
+  return (
+    <NavigationContainer>
+      <StudentRootStack.Navigator screenOptions={{ headerShown: false }}>
+        <StudentRootStack.Screen name="Tabs">
+          {() => <StudentTabNavigator profile={profile} onLogout={onLogout} />}
+        </StudentRootStack.Screen>
+        <StudentRootStack.Screen name="Learning">
+          {() => <LearningNavigator profile={profile} />}
+        </StudentRootStack.Screen>
+      </StudentRootStack.Navigator>
+    </NavigationContainer>
+  );
+}
+
+function StudentTabNavigator({
+  profile,
+  onLogout,
+}: {
+  profile: Profile;
+  onLogout: () => void;
+}) {
+  return (
+    <StudentTabs.Navigator screenOptions={{ headerShown: false }}>
+      <StudentTabs.Screen name="Home">
+        {({ navigation }) => (
+          <TabCourseScreen
+            profile={profile}
+            mode="home"
+            navigation={navigation}
+            onLogout={onLogout}
+          />
+        )}
+      </StudentTabs.Screen>
+      <StudentTabs.Screen name="Courses">
+        {({ navigation }) => (
+          <TabCourseScreen
+            profile={profile}
+            mode="classes"
+            navigation={navigation}
+            onLogout={onLogout}
+          />
+        )}
+      </StudentTabs.Screen>
+      <StudentTabs.Screen name="Downloads">
+        {({ navigation }) => <DownloadsTab navigation={navigation} />}
+      </StudentTabs.Screen>
+      <StudentTabs.Screen name="Profile">
+        {() => <ProfileTab profile={profile} onLogout={onLogout} />}
+      </StudentTabs.Screen>
+    </StudentTabs.Navigator>
+  );
+}
+
+function TabCourseScreen({
+  profile,
+  mode,
+  navigation,
+  onLogout,
+}: {
+  profile: Profile;
+  mode: 'home' | 'classes';
+  navigation: { navigate: (name: string, params?: object) => void };
+  onLogout: () => void;
+}) {
+  const openCourse = (courseId: string, title: string) =>
+    navigation.navigate('Learning', {
+      screen: 'Course',
+      params: { courseId, title },
+    });
+
+  return (
+    <CourseList
+      profile={profile}
+      mode={mode}
+      openCourse={openCourse}
+      onLogout={onLogout}
+      onNavigate={key => {
+        if (key === 'home') navigation.navigate('Home');
+        if (key === 'classes') navigation.navigate('Courses');
+        if (key === 'download') navigation.navigate('Downloads');
+      }}
+    />
+  );
+}
+
+function DownloadsTab({
+  navigation,
+}: {
+  navigation: { navigate: (name: string, params?: object) => void };
+}) {
+  return (
+    <DownloadsScreen
+      onNavigate={key => {
+        if (key === 'home') navigation.navigate('Home');
+        if (key === 'classes') navigation.navigate('Courses');
+        if (key === 'download') navigation.navigate('Downloads');
+      }}
+      onPlay={item =>
+        navigation.navigate('Learning', {
+          screen: 'Player',
+          params: {
+            courseId: item.courseId,
+            courseTitle: 'Downloaded lesson',
+            video: {
+              id: item.lectureId,
+              title: item.title,
+              description: null,
+              durationSeconds: null,
+              pdfUrl: null,
+              slidesUrl: null,
+              progress: null,
+              quiz: null,
+              moduleTitle: '',
+            },
+          },
+        })
+      }
+    />
+  );
+}
+
+function ProfileTab({
+  profile,
+  onLogout,
+}: {
+  profile: Profile;
+  onLogout: () => void;
+}) {
+  return (
+    <SafeAreaView style={styles.screen}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Text style={styles.eyebrow}>Profile</Text>
+        <Text style={styles.title}>{profile.fullName || 'Student'}</Text>
+        <Text style={styles.body}>{profile.email}</Text>
+        <Pressable onPress={onLogout} style={styles.button}>
+          <Text style={styles.buttonText}>Sign out</Text>
+        </Pressable>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function LearningNavigator({ profile }: { profile: Profile }) {
+  return (
+    <LearningStack.Navigator screenOptions={{ headerShown: false }}>
+      <LearningStack.Screen name="Course">
+        {({ navigation, route }) => (
+          <CourseOutline
+            courseId={route.params.courseId}
+            title={route.params.title}
+            back={() => navigation.goBack()}
+            onNavigate={() => undefined}
+            openVideo={video =>
+              navigation.navigate('Player', {
+                courseId: route.params.courseId,
+                courseTitle: route.params.title,
+                video,
+              })
+            }
+            openPdf={(title, url) =>
+              navigation.navigate('Pdf', {
+                courseId: route.params.courseId,
+                courseTitle: route.params.title,
+                title,
+                url,
+              })
+            }
+            openQuiz={quiz =>
+              navigation.navigate('Quiz', {
+                courseId: route.params.courseId,
+                courseTitle: route.params.title,
+                quiz,
+              })
+            }
+          />
+        )}
+      </LearningStack.Screen>
+      <LearningStack.Screen name="Player">
+        {({ navigation, route }) => (
+          <Player
+            email={profile.email}
+            screen={{ kind: 'player', ...route.params }}
+            back={() => navigation.goBack()}
+            onNavigate={() => undefined}
+            openVideo={video =>
+              navigation.replace('Player', {
+                ...route.params,
+                video,
+              })
+            }
+            openPdf={(title, url) =>
+              navigation.navigate('Pdf', {
+                courseId: route.params.courseId,
+                courseTitle: route.params.courseTitle,
+                title,
+                url,
+              })
+            }
+            openQuiz={quiz =>
+              navigation.navigate('Quiz', {
+                courseId: route.params.courseId,
+                courseTitle: route.params.courseTitle,
+                quiz,
+              })
+            }
+            openAssignment={assignment =>
+              navigation.navigate('Assignment', {
+                courseId: route.params.courseId,
+                courseTitle: route.params.courseTitle,
+                assignment,
+              })
+            }
+            previousContent={null}
+            nextContent={null}
+            onOpenContent={() => undefined}
+          />
+        )}
+      </LearningStack.Screen>
+      <LearningStack.Screen name="Pdf">
+        {({ navigation, route }) => (
+          <PdfReader
+            title={route.params.title}
+            url={route.params.url}
+            back={() => navigation.goBack()}
+            previousContent={null}
+            nextContent={null}
+            onOpenContent={() => undefined}
+          />
+        )}
+      </LearningStack.Screen>
+      <LearningStack.Screen name="Quiz">
+        {({ navigation, route }) => (
+          <QuizScreen
+            courseTitle={route.params.courseTitle}
+            quiz={route.params.quiz}
+            back={() => navigation.goBack()}
+            onNavigate={() => undefined}
+            previousContent={null}
+            nextContent={null}
+            onOpenContent={() => undefined}
+          />
+        )}
+      </LearningStack.Screen>
+      <LearningStack.Screen name="Assignment">
+        {({ navigation, route }) => (
+          <AssignmentScreen
+            courseTitle={route.params.courseTitle}
+            assignment={route.params.assignment}
+            back={() => navigation.goBack()}
+            onNavigate={() => undefined}
+            previousContent={null}
+            nextContent={null}
+            onOpenContent={() => undefined}
+          />
+        )}
+      </LearningStack.Screen>
+    </LearningStack.Navigator>
+  );
+}
+
+*/
+
+function ProfileTab({
+  profile,
+  onLogout,
+}: {
+  profile: Profile;
+  onLogout: () => void;
+}) {
+  return (
+    <SafeAreaView style={styles.screen}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Text style={styles.eyebrow}>Profile</Text>
+        <Text style={styles.title}>{profile.fullName || 'Student'}</Text>
+        <Text style={styles.body}>{profile.email}</Text>
+        <Pressable onPress={onLogout} style={styles.button}>
+          <Text style={styles.buttonText}>Sign out</Text>
+        </Pressable>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
 function StudentApp({
   profile,
   onLogout,
@@ -347,7 +630,27 @@ function StudentApp({
   profile: Profile;
   onLogout: () => void;
 }) {
-  const [screen, setScreen] = useState<Screen>({ kind: 'home' });
+  return (
+    <FileStudentNavigator
+      profile={profile}
+      onLogout={onLogout}
+      screens={{
+        CourseList,
+        DownloadsScreen,
+        CourseOutline,
+        Player,
+        PdfReader,
+        QuizScreen,
+        AssignmentScreen,
+        ProfileTab,
+      }}
+    />
+  );
+
+  /* eslint-disable no-unreachable, react-hooks/exhaustive-deps */
+  /* Legacy screen-state router kept below temporarily while the navigator
+   * screens are migrated. New navigation enters through StudentNavigator. */
+  const [screen, setScreen] = useState<any>({ kind: 'home' });
   const [courseContents, setCourseContents] = useState<PlayerContent[]>([]);
 
   useEffect(() => {
@@ -674,6 +977,7 @@ function StudentApp({
     />
   );
 }
+/* eslint-enable no-unreachable */
 
 /* ------------------------------------------------------------------ */
 /* Home                                                                */
@@ -756,6 +1060,32 @@ function CourseList({
               Your browser enrollments, ready when you are.
             </Text>
 
+            {featured ? (
+              <Pressable
+                onPress={() => openCourse(featured.courseId, featured.courseTitle)}
+                style={({ pressed }) => [styles.homeHeroCard, pressed && styles.cardPressed]}
+              >
+                <Text style={styles.homeHeroEyebrow}>Pick up where you left off</Text>
+                <Text numberOfLines={2} style={styles.homeHeroTitle}>
+                  {featured.courseTitle}
+                </Text>
+                <Text style={[styles.body, styles.homeHeroBody]}>
+                  {featured.completionPercentage}% complete · ready for your next lesson
+                </Text>
+                <View style={[styles.progressTrack, styles.courseProgress]}>
+                  <View
+                    style={[styles.progressFill, { width: `${featured.completionPercentage}%` }]}
+                  />
+                </View>
+                <View style={styles.homeHeroFooter}>
+                  <Text style={styles.homeHeroPercent}>
+                    {featured.completionPercentage}% complete
+                  </Text>
+                  <Text style={styles.homeHeroAction}>Continue learning →</Text>
+                </View>
+              </Pressable>
+            ) : null}
+
             <View style={styles.statRow}>
               <View style={styles.statCard}>
                 <View style={styles.statIcon}>
@@ -794,7 +1124,7 @@ function CourseList({
             color={colors.brass}
             style={styles.loadingCourses}
           />
-        ) : shown.length ? (
+        ) : !isHome && shown.length ? (
           shown.map(course => {
             const percent = course.completionPercentage;
             return (
@@ -838,7 +1168,7 @@ function CourseList({
               </Pressable>
             );
           })
-        ) : (
+        ) : !isHome ? (
           <View style={styles.emptyCard}>
             <View style={styles.courseIcon}>
               <GraduationCap size={22} color={colors.brass} />
@@ -850,7 +1180,7 @@ function CourseList({
               Enroll in a course from the BanglaBox website first.
             </Text>
           </View>
-        )}
+        ) : null}
 
         {isHome && courses.length > 1 ? (
           <Pressable
@@ -863,13 +1193,12 @@ function CourseList({
         ) : null}
       </ScrollView>
 
-      <BottomNav active={mode} onPress={onNavigate} />
     </SafeAreaView>
   );
 }
 
 function DownloadsScreen({
-  onNavigate,
+  onNavigate: _onNavigate,
   onPlay,
 }: {
   onNavigate: (key: NavKey) => void;
@@ -974,11 +1303,11 @@ function DownloadsScreen({
         )}
       </ScrollView>
 
-      <BottomNav active="download" onPress={onNavigate} />
     </SafeAreaView>
   );
 }
 
+/* Legacy custom tab bar replaced by React Navigation bottom tabs.
 function BottomNav({
   active,
   onPress,
@@ -1026,6 +1355,7 @@ function BottomNav({
     </View>
   );
 }
+*/
 
 /* ------------------------------------------------------------------ */
 /* Course outline                                                      */
@@ -1035,7 +1365,7 @@ function CourseOutline({
   courseId,
   title,
   back,
-  onNavigate,
+  onNavigate: _onNavigate,
   openVideo,
   openPdf,
   openQuiz,
@@ -1439,7 +1769,6 @@ function CourseOutline({
         )}
       </ScrollView>
 
-      <BottomNav active="classes" onPress={onNavigate} />
     </SafeAreaView>
   );
 }
@@ -1507,55 +1836,73 @@ const ModuleCard = memo(
 
         {open ? (
           <View style={styles.moduleExpanded}>
-            {module.pdfUrl ? (
-              <ContentButton
-                label="Read module PDF"
-                type="PDF"
-                onPress={() => openPdf(`${module.title} • PDF`, module.pdfUrl!)}
-              />
-            ) : null}
-
-            {module.videos.map(video => {
-              const isOffline = offline.some(
-                item => item.lectureId === video.id,
-              );
-              return (
-                <View key={video.id} style={styles.contentItemSpacing}>
+            {orderedModuleContentTypes(module).map(type => {
+              if (type === 'pdf' && module.pdfUrl) {
+                return (
                   <ContentButton
-                    label={video.title}
-                    type="Video"
-                    subtitle={formatDuration(video.durationSeconds ?? 0)}
-                    offline={isOffline}
-                    onPress={() => openVideo(video)}
-                    completed={video.progress?.isCompleted}
+                    key="module-pdf"
+                    label="Read module PDF"
+                    type="PDF"
+                    onPress={() => openPdf(`${module.title} • PDF`, module.pdfUrl!)}
                   />
-                  {video.pdfUrl ? (
-                    <ContentButton
-                      label="Read lecture PDF"
-                      type="PDF"
-                      onPress={() =>
-                        openPdf(`${video.title} • PDF`, video.pdfUrl!)
-                      }
-                    />
-                  ) : null}
-                  {video.quiz ? (
-                    <ContentButton
-                      label={video.quiz.title}
-                      type="Quiz"
-                      onPress={() => openQuiz(video.quiz!)}
-                    />
-                  ) : null}
-                </View>
-              );
-            })}
+                );
+              }
 
-            {module.quiz && !moduleQuizIsAttachedToVideo ? (
-              <ContentButton
-                label={module.quiz.title}
-                type="Quiz"
-                onPress={() => openQuiz(module.quiz!)}
-              />
-            ) : null}
+              if (type === 'video') {
+                return [...module.videos]
+                  .sort(
+                    (left, right) =>
+                      ((left as LearningVideo & { position?: number }).position ?? 0) -
+                      ((right as LearningVideo & { position?: number }).position ?? 0),
+                  )
+                  .map(video => {
+                    const isOffline = offline.some(
+                      item => item.lectureId === video.id,
+                    );
+                    return (
+                      <View key={video.id} style={styles.contentItemSpacing}>
+                        <ContentButton
+                          label={video.title}
+                          type="Video"
+                          subtitle={formatDuration(video.durationSeconds ?? 0)}
+                          offline={isOffline}
+                          onPress={() => openVideo(video)}
+                          completed={video.progress?.isCompleted}
+                        />
+                        {video.pdfUrl ? (
+                          <ContentButton
+                            label="Read lecture PDF"
+                            type="PDF"
+                            onPress={() =>
+                              openPdf(`${video.title} • PDF`, video.pdfUrl!)
+                            }
+                          />
+                        ) : null}
+                        {video.quiz ? (
+                          <ContentButton
+                            label={video.quiz.title}
+                            type="Quiz"
+                            onPress={() => openQuiz(video.quiz!)}
+                          />
+                        ) : null}
+                      </View>
+                    );
+                  });
+              }
+
+              if (type === 'quiz' && module.quiz && !moduleQuizIsAttachedToVideo) {
+                return (
+                  <ContentButton
+                    key="module-quiz"
+                    label={module.quiz.title}
+                    type="Quiz"
+                    onPress={() => openQuiz(module.quiz!)}
+                  />
+                );
+              }
+
+              return null;
+            })}
           </View>
         ) : null}
       </View>
@@ -1686,6 +2033,31 @@ function contentKey(content: PlayerContent) {
   return `assignment:${content.assignment.id}`;
 }
 
+type ModuleContentType = 'video' | 'pdf' | 'quiz' | 'assignment';
+
+function orderedModuleContentTypes(module: {
+  contentTypes?: ModuleContentType[];
+  videos: LearningVideo[];
+  pdfUrl: string | null;
+  slidesUrl: string | null;
+  quiz?: Quiz | null;
+  assignment?: LearningAssignment | null;
+}): ModuleContentType[] {
+  const actualTypes: ModuleContentType[] = [];
+  if (module.videos.length) actualTypes.push('video');
+  if (module.pdfUrl || module.slidesUrl) actualTypes.push('pdf');
+  if (module.quiz) actualTypes.push('quiz');
+  if (module.assignment) actualTypes.push('assignment');
+  const declaredTypes = module.contentTypes ?? [];
+
+  // Keep the instructor's declared order, but never hide content just because
+  // an older API response has an incomplete contentTypes array.
+  return [
+    ...declaredTypes,
+    ...actualTypes.filter(type => !declaredTypes.includes(type)),
+  ];
+}
+
 function buildCourseContents(course: LearningCourse): PlayerContent[] {
   const contents: PlayerContent[] = [];
   const sections = [...(course.sections as OrderedSection[])].sort(
@@ -1698,14 +2070,7 @@ function buildCourseContents(course: LearningCourse): PlayerContent[] {
     );
 
     modules.forEach(module => {
-      const types = module.contentTypes?.length
-        ? module.contentTypes
-        : [
-            ...(module.videos.length ? ['video' as const] : []),
-            ...(module.pdfUrl || module.slidesUrl ? ['pdf' as const] : []),
-            ...(module.quiz ? ['quiz' as const] : []),
-            ...(module.assignment ? ['assignment' as const] : []),
-          ];
+      const types = orderedModuleContentTypes(module);
       let videoIndex = 0;
       let hasPdf = false;
       let hasQuiz = false;
@@ -1771,11 +2136,45 @@ function buildCourseContents(course: LearningCourse): PlayerContent[] {
   return contents;
 }
 
+function useAdjacentCourseContent(
+  courseId: string | undefined,
+  current: PlayerContent,
+) {
+  const [contents, setContents] = useState<PlayerContent[]>([]);
+
+  useEffect(() => {
+    if (!courseId) {
+      setContents([]);
+      return;
+    }
+
+    let active = true;
+    api
+      .learning(courseId)
+      .then(course => {
+        if (active) setContents(buildCourseContents(course));
+      })
+      .catch(() => {
+        if (active) setContents([]);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [courseId]);
+
+  const index = contents.findIndex(content => contentKey(content) === contentKey(current));
+  return {
+    previous: index > 0 ? contents[index - 1] : null,
+    next: index >= 0 ? contents[index + 1] ?? null : null,
+  };
+}
+
 function Player({
   email,
   screen,
   back,
-  onNavigate,
+  onNavigate: _onNavigate,
   openVideo,
   openPdf,
   openQuiz,
@@ -1868,16 +2267,7 @@ function Player({
           );
 
           modules.forEach(module => {
-            const types = module.contentTypes?.length
-              ? module.contentTypes
-              : [
-                  ...(module.videos.length ? ['video' as const] : []),
-                  ...(module.pdfUrl || module.slidesUrl
-                    ? ['pdf' as const]
-                    : []),
-                  ...(module.quiz ? ['quiz' as const] : []),
-                  ...(module.assignment ? ['assignment' as const] : []),
-                ];
+            const types = orderedModuleContentTypes(module);
             let videoIndex = 0;
             let hasPdf = false;
             let hasQuiz = false;
@@ -2464,13 +2854,6 @@ function Player({
             ) : null}
           </ScrollView>
 
-          <BottomNav
-            active="classes"
-            onPress={key => {
-              saveProgress(position);
-              onNavigate(key);
-            }}
-          />
         </>
       ) : null}
     </View>
@@ -2533,14 +2916,16 @@ function ContentNavigation({
 }
 
 function AssignmentScreen({
+  courseId,
   courseTitle,
   assignment,
   back,
-  onNavigate,
+  onNavigate: _onNavigate,
   previousContent,
   nextContent,
   onOpenContent,
 }: {
+  courseId?: string;
   courseTitle: string;
   assignment: LearningAssignment;
   back: () => void;
@@ -2549,6 +2934,13 @@ function AssignmentScreen({
   nextContent: PlayerContent | null;
   onOpenContent: (content: PlayerContent) => void;
 }) {
+  const adjacent = useAdjacentCourseContent(courseId, {
+    kind: 'assignment',
+    title: assignment.title,
+    assignment,
+  });
+  const resolvedPreviousContent = previousContent ?? adjacent.previous;
+  const resolvedNextContent = nextContent ?? adjacent.next;
   const [submissionText, setSubmissionText] = useState(
     assignment.submission?.submissionText ?? '',
   );
@@ -2640,17 +3032,17 @@ function AssignmentScreen({
           )}
         </View>
         <ContentNavigation
-          previousContent={previousContent}
-          nextContent={nextContent}
+          previousContent={resolvedPreviousContent}
+          nextContent={resolvedNextContent}
           onOpenContent={onOpenContent}
         />
       </ScrollView>
-      <BottomNav active="classes" onPress={onNavigate} />
     </SafeAreaView>
   );
 }
 
 function PdfReader({
+  courseId,
   title,
   url,
   back,
@@ -2658,6 +3050,7 @@ function PdfReader({
   nextContent,
   onOpenContent,
 }: {
+  courseId?: string;
   title: string;
   url: string;
   back: () => void;
@@ -2665,6 +3058,14 @@ function PdfReader({
   nextContent: PlayerContent | null;
   onOpenContent: (content: PlayerContent) => void;
 }) {
+  const adjacent = useAdjacentCourseContent(courseId, {
+    kind: 'pdf',
+    title,
+    url,
+  });
+  const resolvedPreviousContent = previousContent ?? adjacent.previous;
+  const resolvedNextContent = nextContent ?? adjacent.next;
+
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.pdfHeader}>
@@ -2697,8 +3098,8 @@ function PdfReader({
           </Pressable>
         </View>
         <ContentNavigation
-          previousContent={previousContent}
-          nextContent={nextContent}
+          previousContent={resolvedPreviousContent}
+          nextContent={resolvedNextContent}
           onOpenContent={onOpenContent}
         />
       </ScrollView>
@@ -2746,14 +3147,16 @@ function ScoreRing({ percent }: { percent: number }) {
 }
 
 function QuizScreen({
+  courseId,
   courseTitle,
   quiz,
   back,
-  onNavigate,
+  onNavigate: _onNavigate,
   previousContent,
   nextContent,
   onOpenContent,
 }: {
+  courseId?: string;
   courseTitle: string;
   quiz: Quiz;
   back: () => void;
@@ -2762,6 +3165,13 @@ function QuizScreen({
   nextContent: PlayerContent | null;
   onOpenContent: (content: PlayerContent) => void;
 }) {
+  const adjacent = useAdjacentCourseContent(courseId, {
+    kind: 'quiz',
+    title: quiz.title,
+    quiz,
+  });
+  const resolvedPreviousContent = previousContent ?? adjacent.previous;
+  const resolvedNextContent = nextContent ?? adjacent.next;
   const [answers, setAnswers] = useState<Record<string, string[]>>({});
   const [submittedAnswers, setSubmittedAnswers] = useState<Record<
     string,
@@ -3211,14 +3621,13 @@ function QuizScreen({
         )}
 
         <ContentNavigation
-          previousContent={previousContent}
-          nextContent={nextContent}
+          previousContent={resolvedPreviousContent}
+          nextContent={resolvedNextContent}
           onOpenContent={onOpenContent}
         />
         <View style={styles.quizFooterSpace} />
       </ScrollView>
 
-      <BottomNav active="classes" onPress={onNavigate} />
     </SafeAreaView>
   );
 }

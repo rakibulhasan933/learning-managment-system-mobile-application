@@ -59,6 +59,11 @@ react {
  */
 def enableProguardInReleaseBuilds = true
 
+def uploadStoreFile = System.getenv("BANGLABOX_UPLOAD_STORE_FILE")
+def uploadStorePassword = System.getenv("BANGLABOX_UPLOAD_STORE_PASSWORD")
+def uploadKeyAlias = System.getenv("BANGLABOX_UPLOAD_KEY_ALIAS")
+def uploadKeyPassword = System.getenv("BANGLABOX_UPLOAD_KEY_PASSWORD")
+
 /**
  * The preferred build flavor of JavaScriptCore (JSC)
  *
@@ -92,15 +97,29 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            storeFile uploadStoreFile ? file(uploadStoreFile) : file('release.keystore')
+            storePassword uploadStorePassword ?: ''
+            keyAlias uploadKeyAlias ?: ''
+            keyPassword uploadKeyPassword ?: ''
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            def releaseTaskRequested = gradle.startParameter.taskNames.any { taskName ->
+                taskName.toLowerCase().contains('release')
+            }
+            if (releaseTaskRequested && (!uploadStoreFile || !uploadStorePassword || !uploadKeyAlias || !uploadKeyPassword)) {
+                throw new GradleException(
+                    "Release signing is not configured. Set BANGLABOX_UPLOAD_STORE_FILE, " +
+                    "BANGLABOX_UPLOAD_STORE_PASSWORD, BANGLABOX_UPLOAD_KEY_ALIAS, and " +
+                    "BANGLABOX_UPLOAD_KEY_PASSWORD before building a release."
+                )
+            }
+            signingConfig signingConfigs.release
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }

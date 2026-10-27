@@ -1,5 +1,14 @@
 # Student mobile app plan
 
+## Play Store distribution mode
+
+The Play Store build is a learning-only companion app. It does not sell courses
+or expose checkout, coupons, bKash/Nagad/Rocket payment instructions, payment
+proof submission, or order creation. Course purchases and enrollment happen on
+the web application; the mobile app only opens content for an already-active
+enrollment. The backend remains the authority and must reject learning access
+for pending, rejected, revoked, or missing enrollments.
+
 This document describes a student-only mobile application for the LMS. It is a
 planning and implementation guide; it does not scaffold a mobile app. The web
 application and the existing Express backend remain the source of truth.
