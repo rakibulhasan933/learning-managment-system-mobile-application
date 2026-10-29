@@ -282,21 +282,28 @@ export const api = {
     }),
   me: () => request<Profile>('/auth/me'),
   logout: async () => {
-    const saved = await Keychain.getGenericPassword({ service: CREDENTIAL });
-    await request(
-      '/auth/logout',
-      {
-        method: 'POST',
-        body: JSON.stringify({
-          refreshToken: saved
-            ? (JSON.parse(saved.password) as Session).refreshToken
-            : undefined,
-        }),
-      },
-      false,
-    ).catch(() => undefined);
-    await clearSession();
-    await clearOfflineDownloads();
+    // Server revocation is best-effort: even if the Keychain read or the
+    // network call fails, local cleanup below must still run, so a failed
+    // sign-out can never leave a usable session or offline videos behind.
+    try {
+      const saved = await Keychain.getGenericPassword({ service: CREDENTIAL });
+      await request(
+        '/auth/logout',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            refreshToken: saved
+              ? (JSON.parse(saved.password) as Session).refreshToken
+              : undefined,
+          }),
+        },
+        false,
+      ).catch(() => undefined);
+    } catch {
+      // Ignore: fall through to local cleanup.
+    }
+    await clearSession().catch(() => undefined);
+    await clearOfflineDownloads().catch(() => undefined);
   },
   courses: (query = '') =>
     request<{ courses: Course[] }>(

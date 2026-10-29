@@ -161,7 +161,24 @@ export default function App() {
       {!ready ? (
         <Splash />
       ) : profile ? (
-        <StudentApp profile={profile} onLogout={() => setProfile(null)} />
+        <StudentApp
+          profile={profile}
+          onLogout={async () => {
+            // Real sign-out (not just clearing in-memory state): revoke the
+            // server refresh token and delete offline downloads via
+            // api.logout(), then always navigate to Login, even if the
+            // server call fails. api.logout() itself also best-efforts
+            // local cleanup, so a network failure cannot leave a session.
+            try {
+              await api.logout();
+            } catch {
+              // Local cleanup already attempted inside api.logout();
+              // navigation to Login must still happen below.
+            } finally {
+              setProfile(null);
+            }
+          }}
+        />
       ) : (
         <FileAuthNavigator screens={{ Login }} onLogin={setProfile} />
       )}
@@ -630,6 +647,19 @@ function StudentApp({
   profile: Profile;
   onLogout: () => void;
 }) {
+  // ACTIVE path (FileStudentNavigator, above the legacy router below).
+  // Prune offline downloads for courses that are no longer actively
+  // enrolled (or whose file is missing) on launch (this component mounts
+  // only when authenticated, including on session restore) and whenever
+  // the app returns to the foreground.
+  useEffect(() => {
+    api.reconcileOffline().catch(() => undefined);
+    const sub = AppState.addEventListener('change', state => {
+      if (state === 'active') api.reconcileOffline().catch(() => undefined);
+    });
+    return () => sub.remove();
+  }, []);
+
   return (
     <FileStudentNavigator
       profile={profile}
