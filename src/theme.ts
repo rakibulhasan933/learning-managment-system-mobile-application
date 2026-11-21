@@ -57,10 +57,10 @@ export const styles = StyleSheet.create({
   body: { color: colors.muted, fontSize: 14, lineHeight: 21, fontFamily: sans },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: 20,
+    borderRadius: 22,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 16,
+    padding: 20,
   },
   cardPressed: { backgroundColor: colors.elevated },
   input: {
@@ -333,14 +333,21 @@ export const styles = StyleSheet.create({
   // ---- Bottom navigation ------------------------------------------------
   bottomNav: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.ink,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    paddingTop: 10,
+    paddingTop: 14,
+    paddingBottom: 8,
   },
-  bottomNavItem: { flex: 1, alignItems: 'center', gap: 4 },
-  bottomNavLabel: { color: colors.muted, fontSize: 11 },
-  bottomNavLabelActive: { color: colors.brass },
+  bottomNavItem: { flex: 1, alignItems: 'center', gap: 6, minHeight: 44 },
+  bottomNavLabel: {
+    color: colors.muted,
+    fontSize: 10,
+    fontWeight: '600',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  bottomNavLabelActive: { color: colors.brass, fontWeight: '800' },
 
   // ---- Course outline ---------------------------------------------------
   outlineContent: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 32 },
@@ -383,7 +390,7 @@ export const styles = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 16,
+    padding: 18,
   },
   sectionChevron: { paddingLeft: 8 },
   milestoneRow: { flexDirection: 'row', alignItems: 'center', flex: 1 },
@@ -407,10 +414,10 @@ export const styles = StyleSheet.create({
 
   moduleCard: {
     backgroundColor: colors.elevated,
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 14,
+    padding: 16,
   },
   moduleCardSpacing: { marginTop: 8 },
   moduleHeader: { flexDirection: 'row', alignItems: 'center' },
@@ -442,9 +449,9 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 4,
-    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 6,
+    borderRadius: 14,
   },
   contentRowPressed: { backgroundColor: colors.surface },
   contentIcon: {

@@ -188,7 +188,7 @@ export default function App() {
 
 function Splash() {
   return (
-    <SafeAreaView style={[styles.screen, styles.center]}>
+    <SafeAreaView className="items-center justify-center flex-1 bg-ink">
       <View style={styles.logoMark}>
         <Image
           source={require('./public/banglabox-app-icon-1024.png')}
@@ -196,10 +196,14 @@ function Splash() {
           resizeMode="contain"
         />
       </View>
-      <Text style={styles.title}>BanglaBox</Text>
-      <View style={styles.thread} />
-      <Text style={[styles.body, styles.splashSubtitle]}>Student learning</Text>
-      <ActivityIndicator color={colors.brass} style={styles.splashSpinner} />
+      <Text className="font-serif text-[28px] leading-[34px] text-text">
+        BanglaBox
+      </Text>
+      <View className="w-16 h-px mt-4 mb-2 bg-brass" />
+      <Text className="mt-2 text-[14px] leading-[21px] text-muted">
+        Student learning
+      </Text>
+      <ActivityIndicator color={colors.brass} className="mt-[22px]" />
     </SafeAreaView>
   );
 }
@@ -263,31 +267,31 @@ export function Login({ onLogin }: { onLogin: (profile: Profile) => void }) {
   }
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView className="flex-1 bg-ink">
       <KeyboardAvoidingView
-        style={styles.flex}
+        className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
-          contentContainerStyle={[styles.content, styles.loginContent]}
+          contentContainerStyle={{padding: 20, paddingBottom: 36, flexGrow: 1, justifyContent: 'center'}}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.loginBrand}>
-            <View style={styles.logoMark}>
+          <View className="items-center mb-9">
+            <View className="items-center justify-center mb-4 border w-14 h-14 rounded-2xl bg-brass-soft border-brass">
               <Image
                 source={require('./public/banglabox-app-icon-1024.png')}
-                style={styles.logoImage}
+                className="w-[42px] h-[42px] rounded-xl"
                 resizeMode="contain"
               />
             </View>
-            <Text style={[styles.title, styles.loginTitle]}>BanglaBox</Text>
-            <View style={styles.thread} />
-            <Text style={[styles.body, styles.loginSubtitle]}>
+            <Text className="font-serif text-[28px] leading-[34px] text-text">BanglaBox</Text>
+            <View className="w-16 h-px mt-4 mb-2 bg-brass" />
+            <Text className="mt-2 text-center text-[14px] leading-[21px] text-muted">
               Continue your Folio courses on your phone.
             </Text>
           </View>
 
-          <Text style={[styles.heading, styles.loginFirstLabel]}>Email</Text>
+          <Text className="mt-1 text-base font-semibold text-text">Email</Text>
           <TextInput
             autoCapitalize="none"
             keyboardType="email-address"
@@ -295,41 +299,41 @@ export function Login({ onLogin }: { onLogin: (profile: Profile) => void }) {
             placeholderTextColor={colors.muted}
             value={email}
             onChangeText={setEmail}
-            style={styles.input}
+            className="mt-2 rounded-2xl border border-border bg-surface px-4 py-3.5 text-[15px] text-text"
           />
 
-          <Text style={[styles.heading, styles.formLabel]}>Password</Text>
-          <View style={styles.loginPasswordRow}>
+          <Text className="mt-[19px] text-base font-semibold text-text">Password</Text>
+          <View className="flex-row items-center mt-2 border rounded-2xl border-border bg-surface">
             <TextInput
               secureTextEntry={!showPassword}
               placeholder="Enter your password"
               placeholderTextColor={colors.muted}
               value={password}
               onChangeText={setPassword}
-              style={[styles.input, styles.loginPasswordInput]}
+              className="flex-1 border-0 px-4 py-3.5 text-[15px] text-text"
             />
             <Pressable
               onPress={() => setShowPassword(value => !value)}
-              style={styles.passwordToggle}
+              className="px-3.5"
             >
-              <Text style={styles.passwordToggleText}>
+              <Text className="text-xs font-extrabold text-brass">
                 {showPassword ? 'Hide' : 'Show'}
               </Text>
             </Pressable>
           </View>
 
-          {error ? <Text style={styles.loginError}>{error}</Text> : null}
+          {error ? <Text className="mt-3 text-danger">{error}</Text> : null}
 
-          <Pressable style={styles.button} onPress={submit} disabled={busy}>
+          <Pressable className="mt-[18px] items-center rounded-full bg-brass p-[15px]" onPress={submit} disabled={busy}>
             {busy ? (
               <ActivityIndicator color={colors.ink} />
             ) : (
-              <Text style={styles.buttonText}>Sign in</Text>
+              <Text className="text-sm font-bold text-ink">Sign in</Text>
             )}
           </Pressable>
 
           <Pressable>
-            <Text style={styles.forgotPassword}>Forgot password?</Text>
+            <Text className="mt-[18px] text-center font-bold text-muted underline">Forgot password?</Text>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -1053,33 +1057,36 @@ function CourseList({
         course.completionPercentage > 0 && course.completionPercentage < 100,
     ) ?? courses[0];
   const shown = isHome ? (featured ? [featured] : []) : courses;
+  const otherCourses = isHome
+    ? courses.filter(course => course.courseId !== featured?.courseId)
+    : [];
 
   const statusOf = (percent: number) =>
     percent >= 100 ? 'Completed' : percent > 0 ? 'In progress' : 'Not started';
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
+    <SafeAreaView className="flex-1 bg-ink" edges={['top']}>
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={{padding: 20, paddingBottom: 36}}
         showsVerticalScrollIndicator={false}
       >
         {isHome ? (
           <>
-            <View style={styles.rowBetween}>
-              <View style={styles.homeIdentity}>
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>{initial}</Text>
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center flex-1">
+                <View className="items-center justify-center mr-3 border rounded-full h-11 w-11 border-brass bg-brass-soft">
+                  <Text className="text-lg font-bold text-brass">{initial}</Text>
                 </View>
-                <View style={styles.flex}>
-                  <Text style={styles.eyebrow}>Home</Text>
-                  <Text numberOfLines={1} style={styles.homeTitle}>
+                <View className="flex-1">
+                  <Text className="mb-0.5 text-[11px] font-semibold uppercase tracking-[1px] text-brass">Student Hub</Text>
+                  <Text numberOfLines={1} className="font-serif text-[22px] leading-7 text-text">
                     {firstName ? `Welcome, ${firstName}` : 'Welcome'}
                   </Text>
                 </View>
               </View>
               <Pressable
                 onPress={onLogout}
-                style={styles.headerIcon}
+                className="items-center justify-center w-10 h-10 border rounded-full border-border bg-surface"
                 accessibilityLabel="Sign out"
               >
                 <LogOut size={18} color={colors.brass} />
@@ -1089,32 +1096,6 @@ function CourseList({
             <Text style={[styles.body, styles.homeIntro]}>
               Your browser enrollments, ready when you are.
             </Text>
-
-            {featured ? (
-              <Pressable
-                onPress={() => openCourse(featured.courseId, featured.courseTitle)}
-                style={({ pressed }) => [styles.homeHeroCard, pressed && styles.cardPressed]}
-              >
-                <Text style={styles.homeHeroEyebrow}>Pick up where you left off</Text>
-                <Text numberOfLines={2} style={styles.homeHeroTitle}>
-                  {featured.courseTitle}
-                </Text>
-                <Text style={[styles.body, styles.homeHeroBody]}>
-                  {featured.completionPercentage}% complete · ready for your next lesson
-                </Text>
-                <View style={[styles.progressTrack, styles.courseProgress]}>
-                  <View
-                    style={[styles.progressFill, { width: `${featured.completionPercentage}%` }]}
-                  />
-                </View>
-                <View style={styles.homeHeroFooter}>
-                  <Text style={styles.homeHeroPercent}>
-                    {featured.completionPercentage}% complete
-                  </Text>
-                  <Text style={styles.homeHeroAction}>Continue learning →</Text>
-                </View>
-              </Pressable>
-            ) : null}
 
             <View style={styles.statRow}>
               <View style={styles.statCard}>
@@ -1141,9 +1122,9 @@ function CourseList({
           </>
         ) : (
           <>
-            <Text style={styles.eyebrow}>Your courses</Text>
-            <Text style={styles.title}>My classes</Text>
-            <Text style={[styles.body, styles.homeIntro]}>
+            <Text className="mb-1.5 text-[11px] tracking-[0.4px] text-brass">Your courses</Text>
+            <Text className="font-serif text-[28px] leading-[34px] text-text">My classes</Text>
+            <Text className="mt-3 text-[14px] leading-[21px] text-muted">
               {plural(courses.length, 'course')} enrolled.
             </Text>
           </>
@@ -1152,7 +1133,7 @@ function CourseList({
         {busy ? (
           <ActivityIndicator
             color={colors.brass}
-            style={styles.loadingCourses}
+            className="mt-[30px]"
           />
         ) : !isHome && shown.length ? (
           shown.map(course => {
@@ -1161,65 +1142,89 @@ function CourseList({
               <Pressable
                 key={course.courseId}
                 onPress={() => openCourse(course.courseId, course.courseTitle)}
-                style={({ pressed }) => [
-                  styles.courseCard,
-                  pressed && styles.cardPressed,
-                ]}
+                className="rounded-[20px] border border-border bg-surface p-6"
+                style={({ pressed }) => pressed && styles.cardPressed}
               >
-                <View style={styles.courseTop}>
-                  <View style={styles.courseIcon}>
-                    <GraduationCap size={22} color={colors.brass} />
-                  </View>
-                  <View style={styles.courseCopy}>
-                    <Text numberOfLines={2} style={styles.heading}>
+                <View className="flex-row items-start justify-between">
+                  <View className="flex-1 pr-4">
+                    <Text numberOfLines={3} className="font-serif text-xl leading-7 text-text">
                       {course.courseTitle}
                     </Text>
-                    <View style={styles.badge}>
-                      <Text style={styles.badgeText}>{statusOf(percent)}</Text>
+                    <View className="mt-3 flex-row items-center self-start rounded-full border border-teal/30 bg-teal/10 px-2.5 py-1">
+                      <View className="mr-1.5 h-1.5 w-1.5 rounded-full bg-teal" />
+                      <Text className="text-[11px] font-bold uppercase tracking-wide text-teal">{statusOf(percent)}</Text>
                     </View>
                   </View>
-                </View>
-
-                <View style={[styles.progressTrack, styles.courseProgress]}>
-                  <View
-                    style={[styles.progressFill, { width: `${percent}%` }]}
-                  />
-                </View>
-
-                <View style={styles.courseFooter}>
-                  <Text style={styles.body}>{percent}% complete</Text>
-                  <View style={styles.ctaRow}>
-                    <Text style={styles.ctaText}>
-                      {percent > 0 ? 'Continue' : 'Start learning'}
-                    </Text>
-                    <ChevronRight size={16} color={colors.brass} />
+                  <View className="items-center justify-center w-16 h-16">
+                    <Svg width={64} height={64} viewBox="0 0 64 64" style={{transform: [{rotate: '-90deg'}]}}>
+                      <Circle cx="32" cy="32" r="28" stroke={colors.border} strokeWidth="4" fill="transparent" />
+                      <Circle
+                        cx="32"
+                        cy="32"
+                        r="28"
+                        stroke={colors.brass}
+                        strokeWidth="4"
+                        fill="transparent"
+                        strokeDasharray="175.9"
+                        strokeDashoffset={175.9 - (175.9 * percent) / 100}
+                        strokeLinecap="round"
+                      />
+                    </Svg>
+                    <Text className="absolute text-[13px] font-bold text-text">{percent}%</Text>
                   </View>
                 </View>
+                <Pressable
+                  onPress={() => openCourse(course.courseId, course.courseTitle)}
+                  className="mt-6 flex-row items-center justify-between rounded-full bg-brass px-5 py-3.5"
+                >
+                  <View className="flex-row items-center gap-2">
+                    <Play size={18} color={colors.ink} />
+                    <Text className="text-sm font-bold text-ink">{percent > 0 ? 'Resume learning' : 'Start learning'}</Text>
+                  </View>
+                  <ArrowRight size={18} color={colors.ink} />
+                </Pressable>
               </Pressable>
             );
           })
-        ) : !isHome ? (
+        ) : (
           <View style={styles.emptyCard}>
             <View style={styles.courseIcon}>
               <GraduationCap size={22} color={colors.brass} />
             </View>
-            <Text style={[styles.heading, styles.emptyTitle]}>
+            <Text className="mt-3 text-base font-semibold text-text">
               No active enrollment
             </Text>
-            <Text style={[styles.body, styles.emptyBody]}>
+            <Text className="mt-1.5 text-center text-[14px] leading-[21px] text-muted">
               Enroll in a course from the BanglaBox website first.
             </Text>
           </View>
         ) : null}
 
-        {isHome && courses.length > 1 ? (
-          <Pressable
-            onPress={() => onNavigate('classes')}
-            style={styles.seeAllRow}
-          >
-            <Text style={styles.ctaText}>See all {courses.length} classes</Text>
-            <ChevronRight size={16} color={colors.brass} />
-          </Pressable>
+        {isHome ? (
+          <>
+            <View className="flex-row items-center justify-between mt-8 mb-4">
+              <Text className="text-base font-semibold text-text">Other Enrollments</Text>
+              <Pressable onPress={() => onNavigate('classes')}>
+                <Text className="text-xs font-bold uppercase tracking-[1.5px] text-brass">See all</Text>
+              </Pressable>
+            </View>
+            {otherCourses.slice(0, 3).map(course => (
+              <Pressable
+                key={course.courseId}
+                onPress={() => openCourse(course.courseId, course.courseTitle)}
+                className="flex-row items-center gap-4 p-4 mb-3 border rounded-2xl border-border bg-surface/50"
+              >
+                <View className="items-center justify-center w-12 h-12 border rounded-xl border-border bg-elevated">
+                  <BookOpen size={22} color={colors.muted} />
+                </View>
+                <View className="flex-1 min-w-0">
+                  <Text numberOfLines={1} className="text-sm font-semibold text-text">{course.courseTitle}</Text>
+                  <Text className="mt-1 text-xs text-muted">{statusOf(course.completionPercentage)}</Text>
+                </View>
+                <ChevronRight size={18} color={colors.muted} />
+              </Pressable>
+            ))}
+          </>
         ) : null}
       </ScrollView>
 
@@ -1266,36 +1271,36 @@ function DownloadsScreen({
   };
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
+    <SafeAreaView className="flex-1 bg-ink" edges={['top']}>
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={{padding: 20, paddingBottom: 36}}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.eyebrow}>Offline library</Text>
-        <Text style={styles.title}>Downloads</Text>
-        <Text style={[styles.body, styles.homeIntro]}>
+        <Text className="mb-1.5 text-[11px] tracking-[0.4px] text-brass">Offline library</Text>
+        <Text className="font-serif text-[28px] leading-[34px] text-text">Downloads</Text>
+        <Text className="mt-3 text-[14px] leading-[21px] text-muted">
           {plural(items.length, 'video')} saved on this phone.
         </Text>
 
         {busy ? (
           <ActivityIndicator
             color={colors.brass}
-            style={styles.loadingCourses}
+            className="mt-[30px]"
           />
         ) : items.length ? (
           items.map(item => (
-            <View key={item.lectureId} style={styles.upNextRow}>
-              <View style={styles.upNextIcon}>
+            <View key={item.lectureId} className="mt-3 flex-row items-center rounded-[18px] border border-border bg-surface p-4">
+              <View className="items-center justify-center mr-3 rounded-full h-9 w-9 bg-brass-soft">
                 <Play size={14} color={colors.brass} />
               </View>
-              <View style={styles.contentText}>
+              <View className="flex-1 min-w-0">
                 <Text
                   numberOfLines={1}
-                  style={[styles.body, styles.contentLabel]}
+                  className="text-[14px] leading-[21px] text-text"
                 >
                   {item.title}
                 </Text>
-                <View style={styles.contentSubtitle}>
+                <View className="flex-row items-center gap-1 mt-1">
                   <Check size={13} color={colors.teal} />
                   <Text style={styles.offlineLabel}>Offline</Text>
                 </View>
@@ -1303,14 +1308,14 @@ function DownloadsScreen({
               <View style={styles.downloadActions}>
                 <Pressable
                   onPress={() => onPlay(item)}
-                  style={styles.downloadAction}
+                  className="items-center justify-center h-9 w-9"
                   accessibilityLabel="Play downloaded video"
                 >
                   <ChevronRight size={16} color={colors.brass} />
                 </Pressable>
                 <Pressable
                   onPress={() => remove(item)}
-                  style={styles.downloadAction}
+                  className="items-center justify-center h-9 w-9"
                   accessibilityLabel="Delete downloaded video"
                 >
                   <Trash2 size={16} color={colors.danger} />
@@ -1319,14 +1324,14 @@ function DownloadsScreen({
             </View>
           ))
         ) : (
-          <View style={styles.emptyCard}>
-            <View style={styles.courseIcon}>
+          <View className="mt-5 items-center rounded-[18px] border border-border bg-surface p-6">
+            <View className="items-center justify-center h-11 w-11 rounded-2xl bg-brass-soft">
               <Download size={22} color={colors.brass} />
             </View>
-            <Text style={[styles.heading, styles.emptyTitle]}>
+            <Text className="mt-3 text-base font-semibold text-text">
               No downloads yet
             </Text>
-            <Text style={[styles.body, styles.emptyBody]}>
+            <Text className="mt-1.5 text-center text-[14px] leading-[21px] text-muted">
               Download a video to watch it without internet.
             </Text>
           </View>
@@ -1569,7 +1574,7 @@ function CourseOutline({
   const completion = data?.course.completionPercentage ?? 0;
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
+    <SafeAreaView className="flex-1 bg-ink" edges={['top']}>
       <ScrollView contentContainerStyle={styles.outlineContent}>
         <View style={styles.outlineHandle}>
           <View style={styles.outlineHandleBar} />
@@ -3007,7 +3012,7 @@ function AssignmentScreen({
   };
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
+    <SafeAreaView className="flex-1 bg-ink" edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
         <Pressable onPress={back} style={styles.backRow}>
           <ArrowLeft size={17} color={colors.brass} />
@@ -3097,7 +3102,7 @@ function PdfReader({
   const resolvedNextContent = nextContent ?? adjacent.next;
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
+    <SafeAreaView className="flex-1 bg-ink" edges={['top']}>
       <View style={styles.pdfHeader}>
         <Pressable onPress={back} style={styles.headerIcon}>
           <ArrowLeft size={20} color={colors.text} />
@@ -3276,7 +3281,7 @@ function QuizScreen({
   );
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
+    <SafeAreaView className="flex-1 bg-ink" edges={['top']}>
       <ScrollView
         style={styles.quizBody}
         contentContainerStyle={styles.content}

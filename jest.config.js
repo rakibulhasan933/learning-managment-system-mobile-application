@@ -1,5 +1,8 @@
 module.exports = {
   preset: '@react-native/jest-preset',
+  transformIgnorePatterns: [
+    'node_modules/(?!((react-native|@react-native|react-native-css-interop|nativewind)/))',
+  ],
   moduleNameMapper: {
     '^@react-navigation/native$': '<rootDir>/__mocks__/react-navigation.js',
     '^@react-navigation/native-stack$': '<rootDir>/__mocks__/react-navigation.js',
