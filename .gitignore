@@ -66,6 +66,14 @@ yarn-error.log
 # testing
 /coverage
 
+# Local agent/design tooling (not application source)
+/.agents/
+/.superdesign/
+/.bundle/
+
+# React Native generated asset-link manifests
+**/link-assets-manifest.json
+
 # Yarn
 .yarn/*
 !.yarn/patches
